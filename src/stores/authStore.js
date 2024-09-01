@@ -1,35 +1,43 @@
 import create from 'zustand';
-import { auth } from '../firebase';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+
+const auth = getAuth();  // Initialize the auth instance once
 
 const useAuthStore = create((set) => ({
   currentUser: null,
   loading: true,
+
   signup: async (email, password) => {
     try {
-      await auth.createUserWithEmailAndPassword(email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log('User registered:', user);
     } catch (error) {
-      console.log(error);
-      // Handle signup error (e.g., display an error message)
+      console.log('Signup error:', error);
+      throw error;
     }
   },
+
   login: async (email, password) => {
     try {
-      await auth.signInWithEmailAndPassword(email, password);
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      console.log(error);
-      // Handle login error (e.g., display an error message)
+      console.log('Login error:', error);
+      throw error;
     }
   },
+
   logout: async () => {
     try {
-      await auth.signOut();
+      await signOut(auth);
     } catch (error) {
-      console.log(error);
-      // Handle logout error
+      console.log('Logout error:', error);
+      throw error;
     }
   },
+
   initializeAuth: () => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       set({ currentUser: user, loading: false });
     });
     return unsubscribe; // Return unsubscribe function for cleanup
